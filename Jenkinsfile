@@ -6,17 +6,16 @@ pipeline {
     }
 
     environment {
-        PYTHON_HOME = 'C:\\Users\\cotyw\\AppData\\Local\\Programs\\Python\\Python313'
-        PYTHON_EXECUTABLE = "${PYTHON_HOME}\\python.exe"
-        PATH = "${PYTHON_HOME};${PYTHON_HOME}\\Scripts;${env.PATH}"
+    PYTHON_HOME = '/usr/bin'
+    PYTHON_EXECUTABLE = 'python3'
     }
 
     stages {
         stage('Environment Check') {
             steps {
-                sh '''
-                 echo Python Path: $PYTHON_HOME
-                    $PYTHON_EXECUTABLE --version
+                groovyCopyEditsh '''
+                echo Python Path: $PYTHON_HOME
+                $PYTHON_EXECUTABLE --version
                 '''
             }
         }
