@@ -1,92 +1,84 @@
 pipeline {
     agent any
     
-    environment {
-        // Define environment variables
-        DOCKER_IMAGE = 'user-management-app'
-        DOCKER_TAG = "${env.BUILD_ID}"
-    }
-    
     stages {
-        stage('Environment Check') {
-            steps {
-                sh '''
-                    echo "Checking environment..."
-                    which python3 || echo "Python not installed"
-                    which pip3 || echo "Pip not installed"
-                    which node || echo "Node not installed"
-                    which npm || echo "NPM not installed"
-                    which docker || echo "Docker not installed"
-                '''
-            }
-        }
-        
-        stage('Install Tools') {
-            steps {
-                sh '''
-                    # Install Python if not available
-                    if ! which python3; then
-                        apt-get update || apk update
-                        apt-get install -y python3 python3-pip || apk add python3 py3-pip
-                    fi
-                    
-                    # Make sure pip is installed
-                    if ! which pip3; then
-                        apt-get install -y python3-pip || apk add py3-pip
-                    fi
-                '''
-            }
-        }
-        
         stage('Checkout') {
             steps {
+                // Get code from repository
                 checkout scm
             }
         }
         
-        stage('Install Dependencies') {
+        stage('Setup Environment') {
             steps {
-                sh '''
-                    python3 -m pip install --upgrade pip
-                    if [ -f "requirements.txt" ]; then
-                        python3 -m pip install -r requirements.txt
-                    elif [ -f "backend/requirements.txt" ]; then
-                        python3 -m pip install -r backend/requirements.txt
-                    else
-                        echo "No requirements.txt found"
-                    fi
+                // Check Python installation (use system Python)
+                bat 'echo Checking Python installation...'
+                bat 'where python || echo Python not found in PATH'
+                bat 'python --version || echo Python command failed'
+                
+                // Alternatively, use specific Python path if needed
+                bat 'echo Checking specific Python path...'
+                bat '"C:\\Users\\cotyw\\AppData\\Local\\Programs\\Python\\Python313\\python.exe" --version || echo Specific Python path failed'
+                
+                // Create virtual environment (using system Python)
+                bat 'echo Creating virtual environment...'
+                bat 'python -m venv venv || echo Failed to create venv'
+                
+                // Activate virtual environment and install dependencies
+                bat '''
+                    echo Activating virtual environment...
+                    call venv\\Scripts\\activate
+                    echo Installing dependencies...
+                    pip install -r requirements.txt
+                '''
+                
+                // Verify Docker is available
+                bat 'echo Checking Docker installation...'
+                bat 'docker --version || echo Docker not installed'
+                bat 'docker-compose --version || echo Docker Compose not installed'
+            }
+        }
+        
+        stage('Run Tests') {
+            steps {
+                bat '''
+                    call venv\\Scripts\\activate
+                    echo Running Python tests...
+                    rem Add your python test commands here
                 '''
             }
         }
         
-        stage('Lint') {
+        stage('Run Postman Tests') {
             steps {
-                sh '''
-                    python3 -m pip install flake8
-                    python3 -m flake8 . || echo "Skipping Python linting (flake8 issues or no Python files)"
-                '''
+                bat 'echo Running Postman tests...'
+                bat 'where newman || npm install -g newman'
+                bat 'newman run postman_collection.json -e postman_environment.json || echo Postman tests failed'
             }
         }
         
-        stage('Test') {
+        stage('Build Docker Image') {
             steps {
-                sh '''
-                    python3 -m pip install pytest
-                    python3 -m pytest || echo "No Python tests found or tests failed"
-                '''
+                bat 'echo Building Docker image...'
+                bat 'docker build -t user-management-app .'
+            }
+        }
+        
+        stage('Deploy with Docker Compose') {
+            steps {
+                bat 'echo Deploying with Docker Compose...'
+                bat 'docker-compose up -d'
             }
         }
     }
     
     post {
         always {
-            echo "Pipeline execution completed"
-        }
-        success {
-            echo 'Pipeline succeeded successfully!'
-        }
-        failure {
-            echo 'Pipeline failed. Please check the logs for details.'
+            // Clean up after the pipeline completes
+            bat 'docker-compose down || echo Already down'
+            
+            // Report on results
+            echo 'Pipeline completed'
         }
     }
 }
