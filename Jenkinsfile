@@ -15,11 +15,8 @@ pipeline {
         stage('Environment Check') {
             steps {
                 sh '''
-                    echo Python Path: %PYTHON_HOME%
-                    "%PYTHON_EXECUTABLE%" --version
-                    "%PYTHON_EXECUTABLE%" -m pip --version
-                    node -v
-                    npm -v
+                 echo Python Path: $PYTHON_HOME
+                    $PYTHON_EXECUTABLE --version
                 '''
             }
         }
