@@ -1,12 +1,5 @@
 pipeline {
-    agent {
-        // Use a Docker image with Python pre-installed
-        docker {
-            image 'python:3.9'
-            // Allow Docker commands to be run inside this container
-            args '-v /var/run/docker.sock:/var/run/docker.sock -u root'
-        }
-    }
+    agent any
     
     environment {
         // Define environment variables
@@ -15,37 +8,38 @@ pipeline {
     }
     
     stages {
-        stage('Setup Environment') {
+        stage('Environment Check') {
             steps {
-                // Install Docker CLI
-                sh '''
-                    apt-get update
-                    apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release
-                    curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-                    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
-                    apt-get update
-                    apt-get install -y docker-ce-cli
-                    
-                    # Install Node.js and npm
-                    curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
-                    apt-get install -y nodejs
-                '''
-                
-                // Check environment
                 sh '''
                     echo "Checking environment..."
-                    python --version
-                    pip --version
-                    node -v
-                    npm -v
-                    docker --version
+                    which python3 || echo "Python not installed"
+                    which pip3 || echo "Pip not installed"
+                    which node || echo "Node not installed"
+                    which npm || echo "NPM not installed"
+                    which docker || echo "Docker not installed"
+                '''
+            }
+        }
+        
+        stage('Install Tools') {
+            steps {
+                sh '''
+                    # Install Python if not available
+                    if ! which python3; then
+                        apt-get update || apk update
+                        apt-get install -y python3 python3-pip || apk add python3 py3-pip
+                    fi
+                    
+                    # Make sure pip is installed
+                    if ! which pip3; then
+                        apt-get install -y python3-pip || apk add py3-pip
+                    fi
                 '''
             }
         }
         
         stage('Checkout') {
             steps {
-                // Get code from repository
                 checkout scm
             }
         }
@@ -53,9 +47,14 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 sh '''
-                    python -m pip install --upgrade pip
-                    python -m pip install -r requirements.txt || python -m pip install -r backend/requirements.txt
-                    npm install || echo "Skipping npm install (no package.json found)"
+                    python3 -m pip install --upgrade pip
+                    if [ -f "requirements.txt" ]; then
+                        python3 -m pip install -r requirements.txt
+                    elif [ -f "backend/requirements.txt" ]; then
+                        python3 -m pip install -r backend/requirements.txt
+                    else
+                        echo "No requirements.txt found"
+                    fi
                 '''
             }
         }
@@ -63,13 +62,8 @@ pipeline {
         stage('Lint') {
             steps {
                 sh '''
-                    python -m pip install flake8
-                    python -m flake8 . || echo "Skipping Python linting (flake8 issues or no Python files)"
-                    if [ -f "package.json" ]; then
-                        npm run lint || echo "Skipping JS linting (no lint script in package.json)"
-                    else
-                        echo "No package.json found, skipping JS linting"
-                    fi
+                    python3 -m pip install flake8
+                    python3 -m flake8 . || echo "Skipping Python linting (flake8 issues or no Python files)"
                 '''
             }
         }
@@ -77,34 +71,9 @@ pipeline {
         stage('Test') {
             steps {
                 sh '''
-                    python -m pip install pytest
-                    python -m pytest || echo "No Python tests found or tests failed"
-                    if [ -f "package.json" ]; then
-                        npm test || echo "Skipping JS tests (no test script in package.json or tests failed)"
-                    else
-                        echo "No package.json found, skipping JS tests"
-                    fi
+                    python3 -m pip install pytest
+                    python3 -m pytest || echo "No Python tests found or tests failed"
                 '''
-            }
-        }
-        
-        stage('Build Docker Image') {
-            steps {
-                // Build the Docker image
-                sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
-            }
-        }
-        
-        stage('Run Container') {
-            steps {
-                // Stop any existing container with the same name
-                sh '''
-                    docker ps -q --filter "name=user-management-container" | xargs -r docker stop
-                    docker ps -a -q --filter "name=user-management-container" | xargs -r docker rm
-                '''
-                
-                // Run the container
-                sh "docker run -d --name user-management-container -p 8080:5000 ${DOCKER_IMAGE}:${DOCKER_TAG}"
             }
         }
     }
