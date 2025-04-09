@@ -4,23 +4,18 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                // Get code from repository
                 checkout scm
             }
         }
         
         stage('Setup Environment') {
             steps {
-                // Check Python installation (use system Python)
+                // Debug Python installation
                 bat 'echo Checking Python installation...'
                 bat 'where python || echo Python not found in PATH'
                 bat 'python --version || echo Python command failed'
                 
-                // Alternatively, use specific Python path if needed
-                bat 'echo Checking specific Python path...'
-                bat '"C:\\Users\\cotyw\\AppData\\Local\\Programs\\Python\\Python313\\python.exe" --version || echo Specific Python path failed'
-                
-                // Create virtual environment (using system Python)
+                // Create and activate virtual environment
                 bat 'echo Creating virtual environment...'
                 bat 'python -m venv venv || echo Failed to create venv'
                 
@@ -28,7 +23,6 @@ pipeline {
                 bat '''
                     echo Activating virtual environment...
                     call venv\\Scripts\\activate
-                    echo Installing dependencies...
                     pip install -r requirements.txt
                 '''
                 
@@ -49,11 +43,17 @@ pipeline {
             }
         }
         
+        // Optional stage - can be skipped if npm/Newman isn't installed
         stage('Run Postman Tests') {
+            when {
+                expression {
+                    // Only run this stage if Newman is available
+                    return bat(script: 'where newman', returnStatus: true) == 0
+                }
+            }
             steps {
                 bat 'echo Running Postman tests...'
-                bat 'where newman || npm install -g newman'
-                bat 'newman run postman_collection.json -e postman_environment.json || echo Postman tests failed'
+                bat 'newman run postman_collection.json -e postman_environment.json'
             }
         }
         
@@ -76,9 +76,13 @@ pipeline {
         always {
             // Clean up after the pipeline completes
             bat 'docker-compose down || echo Already down'
-            
-            // Report on results
             echo 'Pipeline completed'
+        }
+        success {
+            echo 'Pipeline succeeded!'
+        }
+        failure {
+            echo 'Pipeline failed. Check the logs for details.'
         }
     }
 }
