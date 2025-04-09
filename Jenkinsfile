@@ -5,20 +5,21 @@ pipeline {
         nodejs 'node18' // Name must match what's configured in "Global Tool Configuration"
     }
 
-
-    stages {
-        stage('Environment Check') {
-        environment {
+    environment {
         PYTHON_HOME = '/usr/bin'
         PYTHON_EXECUTABLE = 'python3'
     }
-        steps {
-        sh '''
-          echo Python Path: $PYTHON_HOME
-          $PYTHON_EXECUTABLE --version
-        '''
+
+    stages {
+        stage('Environment Check') {
+            steps {
+                sh '''
+                    echo Python Path: $PYTHON_HOME
+                    $PYTHON_EXECUTABLE --version
+                '''
+            }
         }
-        }
+
         stage('Checkout') {
             steps {
                 checkout scm
@@ -28,8 +29,8 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 sh '''
-                    "%PYTHON_EXECUTABLE%" -m pip install --upgrade pip
-                    "%PYTHON_EXECUTABLE%" -m pip install -r requirements.txt
+                    $PYTHON_EXECUTABLE -m pip install --upgrade pip
+                    $PYTHON_EXECUTABLE -m pip install -r requirements.txt flake8 pytest
                     npm install
                 '''
             }
@@ -38,8 +39,7 @@ pipeline {
         stage('Lint') {
             steps {
                 sh '''
-                    "%PYTHON_EXECUTABLE%" -m pip install flake8
-                    "%PYTHON_EXECUTABLE%" -m flake8 .
+                    $PYTHON_EXECUTABLE -m flake8 .
                     npm run lint
                 '''
             }
@@ -48,8 +48,7 @@ pipeline {
         stage('Test') {
             steps {
                 sh '''
-                    "%PYTHON_EXECUTABLE%" -m pip install pytest
-                    "%PYTHON_EXECUTABLE%" -m pytest
+                    $PYTHON_EXECUTABLE -m pytest
                     npm test
                 '''
             }
