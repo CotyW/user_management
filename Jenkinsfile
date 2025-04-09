@@ -1,17 +1,20 @@
 pipeline {
     agent any
     
+    environment {
+        PYTHON_HOME = 'C:\\Users\\cotyw\\AppData\\Local\\Programs\\Python\\Python313'
+        PYTHON_EXECUTABLE = "${PYTHON_HOME}\\python.exe"
+        PATH = "${PYTHON_HOME};${PYTHON_HOME}\\Scripts;${env.PATH}"
+    }
+    
     stages {
         stage('Environment Check') {
             steps {
-                script {
-                    // Check Python installation
-                    def pythonVersion = bat(
-                        script: 'python --version',
-                        returnStdout: true
-                    ).trim()
-                    echo "Python Version: ${pythonVersion}"
-                }
+                bat '''
+                    echo Python Path: %PYTHON_HOME%
+                    "%PYTHON_EXECUTABLE%" --version
+                    "%PYTHON_EXECUTABLE%" -m pip --version
+                '''
             }
         }
         
@@ -21,19 +24,11 @@ pipeline {
             }
         }
         
-        stage('Setup Python') {
-            steps {
-                bat '''
-                    python --version
-                    python -m pip install --upgrade pip
-                '''
-            }
-        }
-        
         stage('Install Dependencies') {
             steps {
                 bat '''
-                    pip install -r requirements.txt
+                    "%PYTHON_EXECUTABLE%" -m pip install --upgrade pip
+                    "%PYTHON_EXECUTABLE%" -m pip install -r requirements.txt
                 '''
             }
         }
@@ -41,8 +36,8 @@ pipeline {
         stage('Lint') {
             steps {
                 bat '''
-                    pip install flake8
-                    flake8 .
+                    "%PYTHON_EXECUTABLE%" -m pip install flake8
+                    "%PYTHON_EXECUTABLE%" -m flake8 .
                 '''
             }
         }
@@ -50,8 +45,8 @@ pipeline {
         stage('Test') {
             steps {
                 bat '''
-                    pip install pytest
-                    pytest
+                    "%PYTHON_EXECUTABLE%" -m pip install pytest
+                    "%PYTHON_EXECUTABLE%" -m pytest
                 '''
             }
         }
@@ -59,15 +54,15 @@ pipeline {
     
     post {
         always {
-            echo "Pipeline completed"
+            echo "Pipeline execution completed"
         }
         
         success {
-            echo 'Pipeline succeeded!'
+            echo 'Pipeline succeeded successfully!'
         }
         
         failure {
-            echo 'Pipeline failed. Check the logs for details.'
+            echo 'Pipeline failed. Please check the logs for details.'
         }
     }
 }
