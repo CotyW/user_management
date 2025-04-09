@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     tools {
-        nodejs 'node18' // 👈 Name must match what's configured in "Global Tool Configuration"
+        nodejs 'node18' // Name must match what's configured in "Global Tool Configuration"
     }
 
     environment {
@@ -14,7 +14,7 @@ pipeline {
     stages {
         stage('Environment Check') {
             steps {
-                bat '''
+                sh '''
                     echo Python Path: %PYTHON_HOME%
                     "%PYTHON_EXECUTABLE%" --version
                     "%PYTHON_EXECUTABLE%" -m pip --version
@@ -32,7 +32,7 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                bat '''
+                sh '''
                     "%PYTHON_EXECUTABLE%" -m pip install --upgrade pip
                     "%PYTHON_EXECUTABLE%" -m pip install -r requirements.txt
                     npm install
@@ -42,7 +42,7 @@ pipeline {
 
         stage('Lint') {
             steps {
-                bat '''
+                sh '''
                     "%PYTHON_EXECUTABLE%" -m pip install flake8
                     "%PYTHON_EXECUTABLE%" -m flake8 .
                     npm run lint
@@ -52,7 +52,7 @@ pipeline {
 
         stage('Test') {
             steps {
-                bat '''
+                sh '''
                     "%PYTHON_EXECUTABLE%" -m pip install pytest
                     "%PYTHON_EXECUTABLE%" -m pytest
                     npm test
