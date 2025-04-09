@@ -2,60 +2,67 @@ pipeline {
     agent {
         docker {
             image 'python:3.9-slim'
-            args '-v /var/run/docker.sock:/var/run/docker.sock'
+            args '-w /app'
         }
     }
     
-    environment {
-        APP_NAME = 'user-management-app'
-        DOCKER_IMAGE = "${APP_NAME}:${BUILD_NUMBER}"
-    }
-    
     stages {
-        stage('Setup') {
+        stage('Checkout') {
             steps {
-                sh 'pip install -r backend/requirements.txt'
-                sh 'pip install pytest'
+                checkout scm
+            }
+        }
+        
+        stage('Prepare') {
+            steps {
+                // Install any dependencies
+                sh '''
+                    python -m pip install --upgrade pip
+                    # Add any pip install commands for required packages
+                    # For example: pip install flask requests
+                '''
+            }
+        }
+        
+        stage('Lint') {
+            steps {
+                // Optional: Run linter like flake8
+                sh '''
+                    pip install flake8
+                    flake8 .
+                '''
             }
         }
         
         stage('Test') {
             steps {
-                sh 'python -m pytest tests/ -v'
-            }
-        }
-        
-        stage('Build Docker Image') {
-            steps {
-                sh 'docker build -t ${DOCKER_IMAGE} .'
-            }
-        }
-        
-        stage('Deploy') {
-            steps {
+                // Optional: Run tests if you have any
                 sh '''
-                docker-compose down
-                docker-compose up -d
+                    pip install pytest
+                    python -m pytest
                 '''
             }
         }
         
-        stage('API Tests') {
+        stage('Run Application') {
             steps {
-                sh 'npm install -g newman'
-                sh 'newman run postman_collection.json --environment postman_environment.json'
+                // Simply run the app.py (for testing/verification)
+                sh 'python app.py &'
+                // Optional: Add a sleep or health check
+                sh 'sleep 10'
             }
         }
     }
     
     post {
         always {
-            sh 'docker-compose logs > docker_logs.txt'
-            archiveArtifacts artifacts: 'docker_logs.txt', fingerprint: true
+            echo "Pipeline completed"
         }
+        
         success {
-            echo 'Application deployed successfully!'
+            echo 'Pipeline succeeded!'
         }
+        
         failure {
             echo 'Pipeline failed. Check the logs for details.'
         }
