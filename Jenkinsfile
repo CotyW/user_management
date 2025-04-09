@@ -5,21 +5,20 @@ pipeline {
         nodejs 'node18' // Name must match what's configured in "Global Tool Configuration"
     }
 
-    environment {
-    PYTHON_HOME = '/usr/bin'
-    PYTHON_EXECUTABLE = 'python3'
-    }
 
     stages {
         stage('Environment Check') {
-            steps {
-                groovyCopyEditsh '''
-                echo Python Path: $PYTHON_HOME
-                $PYTHON_EXECUTABLE --version
-                '''
-            }
+        environment {
+        PYTHON_HOME = '/usr/bin'
+        PYTHON_EXECUTABLE = 'python3'
+    }
+        steps {
+        sh '''
+          echo Python Path: $PYTHON_HOME
+          $PYTHON_EXECUTABLE --version
+        '''
         }
-
+        }
         stage('Checkout') {
             steps {
                 checkout scm
