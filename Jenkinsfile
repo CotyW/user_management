@@ -1,8 +1,8 @@
 pipeline {
     agent {
-        docker {
-            image 'python:3.9-slim'
-            args '-w /app'
+        // Use node instead of docker to handle Windows-specific issues
+        node {
+            label 'windows'  // Ensure this matches your Windows Jenkins agent label
         }
     }
     
@@ -13,21 +13,28 @@ pipeline {
             }
         }
         
-        stage('Prepare') {
+        stage('Setup Python') {
             steps {
-                // Install any dependencies
-                sh '''
-                    python -m pip install --upgrade pip
-                    # Add any pip install commands for required packages
-                    # For example: pip install flask requests
+                // Use Windows-specific commands
+                bat '''
+                    python --version
+                    pip --version
+                '''
+            }
+        }
+        
+        stage('Install Dependencies') {
+            steps {
+                bat '''
+                    pip install --upgrade pip
+                    pip install -r requirements.txt
                 '''
             }
         }
         
         stage('Lint') {
             steps {
-                // Optional: Run linter like flake8
-                sh '''
+                bat '''
                     pip install flake8
                     flake8 .
                 '''
@@ -36,20 +43,19 @@ pipeline {
         
         stage('Test') {
             steps {
-                // Optional: Run tests if you have any
-                sh '''
+                bat '''
                     pip install pytest
-                    python -m pytest
+                    pytest
                 '''
             }
         }
         
         stage('Run Application') {
             steps {
-                // Simply run the app.py (for testing/verification)
-                sh 'python app.py &'
-                // Optional: Add a sleep or health check
-                sh 'sleep 10'
+                // Run app.py in background
+                bat 'start python app.py'
+                // Wait a moment to ensure it starts
+                bat 'timeout /t 10'
             }
         }
     }
@@ -57,6 +63,8 @@ pipeline {
     post {
         always {
             echo "Pipeline completed"
+            // Cleanup steps if needed
+            bat 'taskkill /F /IM python.exe || exit /B 0'
         }
         
         success {
