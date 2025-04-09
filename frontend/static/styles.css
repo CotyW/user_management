@@ -1,0 +1,244 @@
+/* Reset default browser styles and ensure consistent box model */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box; 
+}
+
+/* Base body styles */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    line-height: 1.6; 
+    background-color: #f4f4f4; 
+    color: #333; 
+    max-width: 1200px; 
+    margin: 0 auto; 
+    padding: 20px; 
+}
+
+
+/* Main content container */
+.container {
+    background-color: white; 
+    border-radius: 8px; 
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    padding: 30px; 
+    margin-top: 20px; 
+}
+
+/* ---- HEADINGS ---- */
+h1, h2 {
+    color: #2c3e50; 
+    margin-bottom: 20px; 
+    text-align: center; 
+}
+
+/* ---- FORM STYLES ---- */
+/* User form container */
+#userForm {
+    display: flex; 
+    flex-direction: column; /* Stack elements vertically */
+    gap: 15px; 
+    margin-bottom: 30px; 
+}
+
+/* Form input fields */
+#userForm input {
+    width: 100%; 
+    border: 1px solid #ddd; 
+    border-radius: 4px; 
+    font-size: 16px; 
+    transition: border-color 0.3s ease; 
+}
+
+/* Focus state for form inputs */
+#userForm input:focus {
+    outline: none; 
+    border-color: #3498db; /* Blue border when focused */
+    box-shadow: 0 0 5px rgba(52, 152, 219, 0.5); /* Subtle glow effect */
+}
+
+/* Form submit button */
+#userForm button {
+    background-color: #3498db; 
+    color: white; 
+    border: none; 
+    padding: 12px 20px; 
+    border-radius: 4px; 
+    cursor: pointer; /* Hand cursor on hover */
+    font-size: 16px; 
+    transition: background-color 0.3s ease; 
+}
+
+/* Hover state  */
+#userForm button:hover {
+    background-color: #2980b9; /* Darker blue on hover */
+}
+
+/* Container for table actions  */
+.table-actions {
+    display: flex; 
+    justify-content: flex-end; /* Align items to the right */
+    margin-bottom: 10px; 
+}
+
+/* Dangerous action button (like delete) */
+.danger-btn {
+    background-color: #e74c3c; /* Red background */
+    color: white; /* White text */
+    border: none; 
+    padding: 8px 16px; 
+    border-radius: 4px; 
+    cursor: pointer; 
+    font-size: 14px; 
+    transition: background-color 0.3s ease; 
+}
+
+/* Hover state for danger button */
+.danger-btn:hover {
+    background-color: #c0392b; 
+}
+
+/* Disabled state for danger button */
+.danger-btn:disabled {
+    background-color: #cccccc; /* Gray when disabled */
+    cursor: not-allowed; /* "Not allowed" cursor */
+}
+
+/* Edit button style */
+.edit-btn {
+    background-color: #f39c12; 
+    color: white; 
+    border: none; 
+    padding: 6px 12px; 
+    border-radius: 4px; 
+    cursor: pointer; /* Hand cursor on hover */
+    margin-right: 5px; 
+}
+
+/* Hover state for edit button */
+.edit-btn:hover {
+    background-color: #d35400; 
+}
+
+/* Delete button style */
+.delete-btn {
+    background-color: #e74c3c; 
+    color: white; 
+    border: none; 
+    padding: 6px 12px; 
+    border-radius: 4px; 
+    cursor: pointer; 
+}
+
+/* Hover state for delete button */
+.delete-btn:hover {
+    background-color: #c0392b; 
+}
+
+/* ---- TABLE STYLES ---- */
+/* User table */
+#userTable {
+    width: 100%; /* Full width */
+    border-collapse: collapse; /* Collapse borders */
+    margin-top: 20px; 
+}
+
+/* Table headers and cells */
+#userTable th, #userTable td {
+    border: 1px solid #ddd; 
+    padding: 12px; 
+    text-align: left; 
+}
+
+/* Table header  */
+#userTable th {
+    background-color: #f8f9fa; 
+    color: #2c3e50; /* Dark blue text */
+    font-weight: 600; /* Semi-bold */
+}
+
+/* Zebra striping for table rows */
+#userTable tr:nth-child(even) {
+    background-color: #f2f2f2; /* Light gray for even rows */
+}
+
+/* Row hover effect */
+#userTable tr:hover {
+    background-color: #e9ecef; /* Highlight on hover */
+}
+
+/* ---- SORTABLE HEADERS ---- */
+/* Sortable table headers */
+.sortable {
+    cursor: pointer; 
+    user-select: none; /* Prevent text selection */
+}
+
+/* Hover effect for sortable headers */
+.sortable:hover {
+    background-color: #e9ecef; 
+}
+
+/* Sort icons */
+.sortable i {
+    margin-left: 5px; /* Space between text and icon */
+}
+
+/* ---- CHECKBOX STYLES ---- */
+/* Checkbox column width */
+.checkbox-column {
+    width: 40px; 
+    text-align: center; 
+}
+
+/* User and select-all checkboxes */
+.user-checkbox, #selectAll {
+    width: 18px; 
+    height: 18px; 
+    cursor: pointer; 
+}
+
+/* ---- ERROR MESSAGE STYLES ---- */
+/* Error message container */
+#errorMessage {
+    background-color: #ff6b6b; 
+    color: white; 
+    padding: 10px; 
+    border-radius: 4px; 
+    margin-bottom: 20px; 
+    text-align: center; 
+    display: none; /* Hidden by default */
+}
+
+/* ---- RESPONSIVE DESIGN ---- */
+/* Styles for smaller screens */
+@media screen and (max-width: 768px) {
+    /* Reduce padding on small screens */
+    body {
+        padding: 10px;
+    }
+
+    /* Reduce container padding */
+    .container {
+        padding: 15px;
+    }
+
+    /* Reduce font size */
+    #userForm, #userTable {
+        font-size: 14px;
+    }
+
+    /* Reduce cell padding */
+    #userTable th, #userTable td {
+        padding: 8px;
+    }
+    
+    /*future function - hiding columns on smaller screen*/
+    #userTable th:nth-child(5),
+    #userTable td:nth-child(5),
+    #userTable th:nth-child(6),
+    #userTable td:nth-child(6) {
+        display: none;
+    }
+}

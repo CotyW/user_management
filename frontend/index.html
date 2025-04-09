@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- mobile friendly -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management</title>
+
+    <link rel="stylesheet" href="/static/styles.css">
+
+    <!-- Font Awesome for sort icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="container">
+        <h1>User Management</h1>
+        
+        <!-- Error message -->
+        <div id="errorMessage"></div>
+        
+        <!-- Add/edit form -->
+        <form id="userForm">
+            <input type="text" id="firstName" placeholder="First Name" required>
+            <input type="text" id="lastName" placeholder="Last Name" required>
+            <input type="email" id="email" placeholder="Email" required>
+            <input type="text" id="phone" placeholder="Phone (10 digits)" required>
+            <button type="submit">Add/Update User</button>
+        </form>
+
+        <h2>User List</h2>
+        
+        <!-- Table of users -->
+        <div class="table-actions">
+            <!-- Bulk delete button -->
+            <button id="bulkDeleteBtn" class="danger-btn" disabled>Delete Selected</button>
+        </div>
+        
+        <!-- Table to display user data -->
+        <table id="userTable">
+            <thead>
+                <tr>
+                    <!-- Bulk select -->
+                    <th class="checkbox-column">
+                        <input type="checkbox" id="selectAll">
+                    </th>
+                    <!-- Sortable header -->
+                    <th class="sortable" data-sort="id">ID <i class="fas fa-sort"></i></th>
+                    <th class="sortable" data-sort="first_name">First Name <i class="fas fa-sort"></i></th>
+                    <th class="sortable" data-sort="last_name">Last Name <i class="fas fa-sort"></i></th>
+                    <th class="sortable" data-sort="email">Email <i class="fas fa-sort"></i></th>
+                    <th class="sortable" data-sort="phone">Phone <i class="fas fa-sort"></i></th>
+                  
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- User data will be added here -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Link to JavaScript file -->
+    <script src="/static/script.js"></script>
+</body>
+</html>
