@@ -1,12 +1,20 @@
 pipeline {
-    agent {
-        // Use node instead of docker to handle Windows-specific issues
-        node {
-            label 'windows'  // Ensure this matches your Windows Jenkins agent label
-        }
-    }
+    agent any
     
     stages {
+        stage('Environment Check') {
+            steps {
+                script {
+                    // Check Python installation
+                    def pythonVersion = bat(
+                        script: 'python --version',
+                        returnStdout: true
+                    ).trim()
+                    echo "Python Version: ${pythonVersion}"
+                }
+            }
+        }
+        
         stage('Checkout') {
             steps {
                 checkout scm
@@ -15,10 +23,9 @@ pipeline {
         
         stage('Setup Python') {
             steps {
-                // Use Windows-specific commands
                 bat '''
                     python --version
-                    pip --version
+                    python -m pip install --upgrade pip
                 '''
             }
         }
@@ -26,7 +33,6 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 bat '''
-                    pip install --upgrade pip
                     pip install -r requirements.txt
                 '''
             }
@@ -49,22 +55,11 @@ pipeline {
                 '''
             }
         }
-        
-        stage('Run Application') {
-            steps {
-                // Run app.py in background
-                bat 'start python app.py'
-                // Wait a moment to ensure it starts
-                bat 'timeout /t 10'
-            }
-        }
     }
     
     post {
         always {
             echo "Pipeline completed"
-            // Cleanup steps if needed
-            bat 'taskkill /F /IM python.exe || exit /B 0'
         }
         
         success {
