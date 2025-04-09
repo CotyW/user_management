@@ -1,36 +1,77 @@
 pipeline {
     agent any
 
+    tools {
+        nodejs 'node18' // 👈 Name must match what's configured in "Global Tool Configuration"
+    }
+
+    environment {
+        PYTHON_HOME = 'C:\\Users\\cotyw\\AppData\\Local\\Programs\\Python\\Python313'
+        PYTHON_EXECUTABLE = "${PYTHON_HOME}\\python.exe"
+        PATH = "${PYTHON_HOME};${PYTHON_HOME}\\Scripts;${env.PATH}"
+    }
+
     stages {
         stage('Environment Check') {
             steps {
-                sh 'node -v'
-                sh 'npm -v'
+                bat '''
+                    echo Python Path: %PYTHON_HOME%
+                    "%PYTHON_EXECUTABLE%" --version
+                    "%PYTHON_EXECUTABLE%" -m pip --version
+                    node -v
+                    npm -v
+                '''
             }
         }
 
         stage('Checkout') {
             steps {
-                git url: 'https://github.com/KevinAlvarezPerez/user_management.git', branch: 'main'
+                checkout scm
             }
         }
 
         stage('Install Dependencies') {
             steps {
-                sh 'npm install'
+                bat '''
+                    "%PYTHON_EXECUTABLE%" -m pip install --upgrade pip
+                    "%PYTHON_EXECUTABLE%" -m pip install -r requirements.txt
+                    npm install
+                '''
             }
         }
 
         stage('Lint') {
             steps {
-                sh 'npm run lint'
+                bat '''
+                    "%PYTHON_EXECUTABLE%" -m pip install flake8
+                    "%PYTHON_EXECUTABLE%" -m flake8 .
+                    npm run lint
+                '''
             }
         }
 
         stage('Test') {
             steps {
-                sh 'npm test'
+                bat '''
+                    "%PYTHON_EXECUTABLE%" -m pip install pytest
+                    "%PYTHON_EXECUTABLE%" -m pytest
+                    npm test
+                '''
             }
+        }
+    }
+
+    post {
+        always {
+            echo "Pipeline execution completed"
+        }
+
+        success {
+            echo 'Pipeline succeeded successfully!'
+        }
+
+        failure {
+            echo 'Pipeline failed. Please check the logs for details.'
         }
     }
 }
