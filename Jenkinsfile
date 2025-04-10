@@ -36,9 +36,17 @@ pipeline {
         stage('Run Tests') {
             steps {
                 bat '''
+                    echo Activating virtual environment...
                     call venv\\Scripts\\activate
-                    echo Running Python tests...
-                    rem Add your python test commands here
+                    
+                    echo Running validation tests...
+                    python -m unittest tests.test_validate
+                    
+                    echo Running API tests...
+                    python -m unittest tests.test_api
+                    
+                    echo Alternatively, discover and run all tests...
+                    python -m unittest discover -s tests
                 '''
             }
         }
