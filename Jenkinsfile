@@ -50,31 +50,13 @@ pipeline {
             }
         }
         
-        stage('Setup Newman for Postman Tests') {
-            steps {
-                bat '''
-                    echo Checking for Node.js and npm...
-                    node --version
-                    npm --version
-                    
-                    echo Setting up Newman for this build...
-                    mkdir node_modules 2>nul || echo "node_modules already exists"
-                    cd node_modules
-                    
-                    echo Installing Newman locally...
-                    npm install newman
-                    
-                    echo Verifying Newman installation...
-                    dir .\\newman\\bin\\newman.js
-                '''
-            }
-        }
-        
         stage('Run Postman Tests') {
             steps {
                 bat '''
-                    echo Running Postman tests with local Newman installation...
-                    node node_modules\\newman\\bin\\newman.js run postman_collection.json -e postman_environment.json --reporters cli,junit --reporter-junit-export postman-results.xml
+                    echo Running Postman tests...
+                    
+                    echo Using full path to Newman...
+                    "C:\\Users\\cotyw\\AppData\\Roaming\\npm\\newman.cmd" run postman_collection.json -e postman_environment.json --reporters cli,junit --reporter-junit-export postman-results.xml
                 '''
             }
             post {
