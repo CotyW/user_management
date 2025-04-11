@@ -97,13 +97,12 @@ pipeline {
     
     post {
         always {
-            // Clean up after the pipeline completes
             bat '''
                 echo Cleaning up...
                 docker-compose down || echo Already down
                 
                 echo Stopping any remaining Flask processes...
-                for /f "tokens=5" %%a in ('netstat -aon ^| findstr :5000') do (
+                for /f "tokens=5" %%a in ('netstat -aon ^| findstr :5000 2^>nul') do (
                     taskkill /F /PID %%a 2>nul || echo No process found
                 )
             '''
