@@ -23,7 +23,7 @@ pipeline {
             }
         }
         
-        stage('Run Unit Tests') {
+        stage('Run Tests') {
             steps {
                 bat '''
                     echo Activating virtual environment...
@@ -50,10 +50,32 @@ pipeline {
             }
         }
         
+        stage('Setup Newman for Postman Tests') {
+            steps {
+                bat '''
+                    echo Checking for Node.js and npm...
+                    node --version || echo Node.js not found
+                    npm --version || echo npm not found
+                    
+                    echo Setting up Newman for this build...
+                    mkdir node_modules 2>nul || echo "node_modules already exists"
+                    cd node_modules
+                    
+                    echo Installing Newman locally...
+                    npm install newman
+                    
+                    echo Verifying Newman installation...
+                    dir .\\newman\\bin\\newman.js
+                '''
+            }
+        }
+        
         stage('Run Postman Tests') {
             steps {
-                bat 'echo Running Postman tests...'
-                bat 'newman run postman_collection.json -e postman_environment.json --reporters cli,junit --reporter-junit-export postman-results.xml'
+                bat '''
+                    echo Running Postman tests with local Newman installation...
+                    node node_modules\\newman\\bin\\newman.js run postman_collection.json -e postman_environment.json --reporters cli,junit --reporter-junit-export postman-results.xml
+                '''
             }
             post {
                 always {
@@ -66,7 +88,7 @@ pipeline {
             steps {
                 bat '''
                     echo Stopping Flask application...
-                    for /f "tokens=5" %%a in ('netstat -aon ^| findstr :5000') do taskkill /F /PID %%a
+                    for /f "tokens=5" %%a in ('netstat -aon ^| findstr :5000') do taskkill /F /PID %%a 2>nul || echo No process found on port 5000
                 '''
             }
         }
