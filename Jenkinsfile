@@ -10,11 +10,6 @@ pipeline {
         
         stage('Setup Environment') {
             steps {
-                // Debug Python installation
-                bat 'echo Checking Python installation...'
-                bat 'where python || echo Python not found in PATH'
-                bat 'python --version || echo Python command failed'
-                
                 // Create and activate virtual environment
                 bat 'echo Creating virtual environment...'
                 bat 'python -m venv venv || echo Failed to create venv'
@@ -25,15 +20,10 @@ pipeline {
                     call venv\\Scripts\\activate
                     pip install -r requirements.txt
                 '''
-                
-                // Verify Docker is available
-                bat 'echo Checking Docker installation...'
-                bat 'docker --version || echo Docker not installed'
-                bat 'docker-compose --version || echo Docker Compose not installed'
             }
         }
         
-        stage('Run Tests') {
+        stage('Run Unit Tests') {
             steps {
                 bat '''
                     echo Activating virtual environment...
@@ -44,24 +34,40 @@ pipeline {
                     
                     echo Running API tests...
                     python -m unittest tests.test_api
-                    
-                    echo Alternatively, discover and run all tests...
-                    python -m unittest discover -s tests
                 '''
             }
         }
         
-        // Optional stage - can be skipped if npm/Newman isn't installed
-        stage('Run Postman Tests') {
-            when {
-                expression {
-                    // Only run this stage if Newman is available
-                    return bat(script: 'where newman', returnStatus: true) == 0
-                }
+        stage('Start Application for Testing') {
+            steps {
+                bat '''
+                    echo Starting Flask application in background...
+                    start /B call venv\\Scripts\\activate ^& python app.py
+                    
+                    echo Waiting for application to start...
+                    timeout /t 10
+                '''
             }
+        }
+        
+        stage('Run Postman Tests') {
             steps {
                 bat 'echo Running Postman tests...'
-                bat 'newman run postman_collection.json -e postman_environment.json'
+                bat 'newman run postman_collection.json -e postman_environment.json --reporters cli,junit --reporter-junit-export postman-results.xml'
+            }
+            post {
+                always {
+                    junit allowEmptyResults: true, testResults: 'postman-results.xml'
+                }
+            }
+        }
+        
+        stage('Stop Application') {
+            steps {
+                bat '''
+                    echo Stopping Flask application...
+                    for /f "tokens=5" %%a in ('netstat -aon ^| findstr :5000') do taskkill /F /PID %%a
+                '''
             }
         }
         
@@ -83,7 +89,15 @@ pipeline {
     post {
         always {
             // Clean up after the pipeline completes
-            bat 'docker-compose down || echo Already down'
+            bat '''
+                echo Cleaning up...
+                docker-compose down || echo Already down
+                
+                echo Stopping any remaining Flask processes...
+                for /f "tokens=5" %%a in ('netstat -aon ^| findstr :5000') do (
+                    taskkill /F /PID %%a 2>nul || echo No process found
+                )
+            '''
             echo 'Pipeline completed'
         }
         success {
