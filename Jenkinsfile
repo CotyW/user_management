@@ -42,10 +42,10 @@ pipeline {
             steps {
                 bat '''
                     echo Starting Flask application in background...
-                    start /B call venv\\Scripts\\activate ^& python app.py
+                    start /B cmd /c "call venv\\Scripts\\activate && python app.py > flask_output.log 2>&1"
                     
                     echo Waiting for application to start...
-                    timeout /t 10
+                    ping -n 10 127.0.0.1 > nul
                 '''
             }
         }
@@ -54,8 +54,8 @@ pipeline {
             steps {
                 bat '''
                     echo Checking for Node.js and npm...
-                    node --version || echo Node.js not found
-                    npm --version || echo npm not found
+                    node --version
+                    npm --version
                     
                     echo Setting up Newman for this build...
                     mkdir node_modules 2>nul || echo "node_modules already exists"
@@ -88,7 +88,12 @@ pipeline {
             steps {
                 bat '''
                     echo Stopping Flask application...
-                    for /f "tokens=5" %%a in ('netstat -aon ^| findstr :5000') do taskkill /F /PID %%a 2>nul || echo No process found on port 5000
+                    for /f "tokens=5" %%a in ('netstat -aon ^| findstr :5000') do (
+                        taskkill /F /PID %%a 2>nul || echo No process found on port 5000
+                    )
+                    
+                    echo Displaying Flask output log:
+                    type flask_output.log || echo No output log found
                 '''
             }
         }
