@@ -96,23 +96,28 @@ pipeline {
     }
     
     post {
-        always {
-            bat '''
-                echo Cleaning up...
-                docker-compose down || echo Already down
-                
-                echo Stopping any remaining Flask processes...
-                for /f "tokens=5" %%a in ('netstat -aon ^| findstr :5000 2^>nul') do (
-                    taskkill /F /PID %%a 2>nul || echo No process found
+    always {
+        bat '''
+            echo Cleaning up...
+            docker-compose down || echo Already down
+            
+            echo Stopping any remaining Flask processes...
+            netstat -aon | findstr :5000 > temp_procs.txt 2>nul || echo No processes found on port 5000
+            for /F "tokens=5" %%a in (temp_procs.txt) do (
+                if not "%%a"=="0" (
+                    taskkill /F /PID %%a 2>nul || echo Process %%a already stopped
                 )
-            '''
-            echo 'Pipeline completed'
-        }
-        success {
-            echo 'Pipeline succeeded!'
-        }
-        failure {
-            echo 'Pipeline failed. Check the logs for details.'
-        }
+            )
+            del temp_procs.txt 2>nul
+            exit /b 0
+        '''
+        echo 'Pipeline completed'
     }
+    success {
+        echo 'Pipeline succeeded!'
+    }
+    failure {
+        echo 'Pipeline failed. Check the logs for details.'
+    }
+}
 }
